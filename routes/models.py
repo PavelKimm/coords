@@ -30,12 +30,19 @@ class Route(models.Model):
     def get_route_points(self):
         return self.points.all()
 
-    @staticmethod
-    def get_directions(start_id, end_id) -> list:
+    @classmethod
+    def get_directions(cls, start_id, end_id) -> list:
         """
+        start_id - id of start Point
+        end_id - id of end Point
+
         start and end points can be the same (a path)
         """
-        route_point_ids = [start_id]
+        if not start_id or not end_id:
+            raise Exception('start_id and end_id must be provided')
+        start_point = Point.objects.get(id=start_id)
+        end_point = Point.objects.get(id=end_id)
+        route_point_ids = [start_point.id]
         number_of_points_in_db = Point.objects.count()
         for _ in range(randint(2, 100)):  # random number of points in the route
             attempts = 0
@@ -44,11 +51,11 @@ class Route(models.Model):
                 if attempts > 100_000:
                     raise Exception('Too many attempts')
                 route_point_id = Point.objects.all()[randint(0, number_of_points_in_db)].id
-                if route_point_id in route_point_ids or route_point_id == end_id:
+                if route_point_id in route_point_ids or route_point_id == end_point.id:
                     continue
                 route_point_ids.append(route_point_id)
                 break
-        route_point_ids.append(end_id)
+        route_point_ids.append(end_point.id)
         return route_point_ids
 
 
